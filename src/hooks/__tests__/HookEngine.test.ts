@@ -130,6 +130,22 @@ describe("RequireIntentPreHook", () => {
 		}
 	})
 
+	it("allows write_to_file when intent is set in task state", () => {
+		const ctx: HookContext = {
+			...baseContext,
+			toolName: "write_to_file",
+			toolArgs: {},
+			taskActiveIntentId: "INT-001",
+			taskActiveMutationClass: "AST_REFACTOR",
+		}
+		const decision = hook.run(ctx)
+		expect(decision.allow).toBe(true)
+		if (decision.allow) {
+			expect(decision.contextPatch?.active_intent_id).toBe("INT-001")
+			expect(decision.contextPatch?.resolved_mutation_class).toBe("AST_REFACTOR")
+		}
+	})
+
 	it("blocks when intent_id is empty string", () => {
 		const ctx: HookContext = {
 			...baseContext,

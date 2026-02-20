@@ -110,6 +110,7 @@ export class SelectActiveIntentTool extends BaseTool<"select_active_intent"> {
 				return
 			}
 
+			task.setActiveIntent(intentId, mutationClass)
 			task.consecutiveMistakeCount = 0
 			pushToolResult(buildIntentContextXml(selectedIntent, mutationClass))
 		} catch (error) {

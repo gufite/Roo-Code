@@ -6,6 +6,8 @@ export interface HookContext {
 	toolArgs: Record<string, unknown>
 	cwd?: string
 	timestamp: string
+	taskActiveIntentId?: string
+	taskActiveMutationClass?: "AST_REFACTOR" | "INTENT_EVOLUTION"
 }
 
 export type BlockCode = "INTENT_REQUIRED" | "SCOPE_VIOLATION" | "DESTRUCTIVE_BLOCKED" | "HOOK_ERROR"

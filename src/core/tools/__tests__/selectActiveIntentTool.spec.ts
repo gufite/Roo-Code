@@ -18,6 +18,7 @@ describe("selectActiveIntentTool", () => {
 			cwd: tempDir,
 			consecutiveMistakeCount: 0,
 			recordToolError: vi.fn(),
+			setActiveIntent: vi.fn(),
 			sayAndCreateMissingParamError: vi.fn().mockResolvedValue("missing param"),
 		}
 
@@ -75,6 +76,7 @@ describe("selectActiveIntentTool", () => {
 		expect(output).toContain("<constraints>")
 		expect(output).toContain("<acceptance_criteria>")
 		expect(mockTask.consecutiveMistakeCount).toBe(0)
+		expect(mockTask.setActiveIntent).toHaveBeenCalledWith("INT-001", "AST_REFACTOR")
 		expect(handleError).not.toHaveBeenCalled()
 	})
 

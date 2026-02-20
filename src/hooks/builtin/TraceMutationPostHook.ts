@@ -56,6 +56,7 @@ function uuidv4(): string {
 function computeMutationClass(
 	toolName: string,
 	toolArgs: Record<string, unknown>,
+	defaultMutationClass?: "AST_REFACTOR" | "INTENT_EVOLUTION",
 ): "AST_REFACTOR" | "INTENT_EVOLUTION" | "UNKNOWN" {
 	// Heuristic: if the content being written is not a new file creation it is
 	// more likely an AST_REFACTOR. INTENT_EVOLUTION is signalled by the agent
@@ -63,6 +64,7 @@ function computeMutationClass(
 	const explicit = toolArgs["mutation_class"]
 	if (explicit === "INTENT_EVOLUTION") return "INTENT_EVOLUTION"
 	if (explicit === "AST_REFACTOR") return "AST_REFACTOR"
+	if (defaultMutationClass) return defaultMutationClass
 	if (toolName === "write_to_file" || toolName === "apply_diff" || toolName === "edit_file") {
 		return "AST_REFACTOR"
 	}
@@ -89,9 +91,10 @@ export class TraceMutationPostHook implements PostToolHook {
 			// Already exists.
 		}
 
-		const intentId = (context.toolArgs["intent_id"] as string | undefined) ?? "UNTRACKED"
+		const intentId =
+			(context.toolArgs["intent_id"] as string | undefined) ?? context.taskActiveIntentId ?? "UNTRACKED"
 		const revisionId = getGitHead(cwd)
-		const mutationClass = computeMutationClass(context.toolName, context.toolArgs)
+		const mutationClass = computeMutationClass(context.toolName, context.toolArgs, context.taskActiveMutationClass)
 
 		const files: TraceFile[] = await Promise.all(
 			context.changedFiles.map(async (relPath) => {

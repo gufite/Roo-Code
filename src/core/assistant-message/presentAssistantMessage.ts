@@ -701,6 +701,8 @@ export async function presentAssistantMessage(cline: Task) {
 					toolArgs: block.params as Record<string, unknown>,
 					cwd: cline.cwd,
 					timestamp: new Date().toISOString(),
+					taskActiveIntentId: cline.activeIntentId,
+					taskActiveMutationClass: cline.activeIntentMutationClass,
 				}
 
 				const preDecision = await hookEngine.runPreHooks(hookContext)
@@ -715,6 +717,18 @@ export async function presentAssistantMessage(cline: Task) {
 				} else if (preDecision.contextPatch) {
 					// Merge any context enrichment from pre-hooks (e.g. active_intent_id).
 					hookContext = { ...hookContext, ...(preDecision.contextPatch as Partial<HookContext>) }
+					const resolvedIntentId = preDecision.contextPatch["resolved_intent_id"]
+					if (typeof resolvedIntentId === "string" && !hookContext.toolArgs["intent_id"]) {
+						hookContext.toolArgs["intent_id"] = resolvedIntentId
+					}
+					const resolvedMutationClass = preDecision.contextPatch["resolved_mutation_class"]
+					if (
+						typeof resolvedMutationClass === "string" &&
+						!hookContext.toolArgs["mutation_class"] &&
+						(resolvedMutationClass === "AST_REFACTOR" || resolvedMutationClass === "INTENT_EVOLUTION")
+					) {
+						hookContext.toolArgs["mutation_class"] = resolvedMutationClass
+					}
 				}
 			}
 

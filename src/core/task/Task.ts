@@ -325,6 +325,8 @@ export class Task extends EventEmitter<TaskEvents> implements TaskLike {
 	consecutiveNoToolUseCount: number = 0
 	consecutiveNoAssistantMessagesCount: number = 0
 	toolUsage: ToolUsage = {}
+	private _activeIntentId?: string
+	private _activeIntentMutationClass?: "AST_REFACTOR" | "INTENT_EVOLUTION"
 
 	// Checkpoints
 	enableCheckpoints: boolean
@@ -841,6 +843,24 @@ export class Task extends EventEmitter<TaskEvents> implements TaskLike {
 	 */
 	public setTaskApiConfigName(apiConfigName: string | undefined): void {
 		this._taskApiConfigName = apiConfigName
+	}
+
+	public setActiveIntent(intentId: string, mutationClass: "AST_REFACTOR" | "INTENT_EVOLUTION"): void {
+		this._activeIntentId = intentId
+		this._activeIntentMutationClass = mutationClass
+	}
+
+	public clearActiveIntent(): void {
+		this._activeIntentId = undefined
+		this._activeIntentMutationClass = undefined
+	}
+
+	public get activeIntentId(): string | undefined {
+		return this._activeIntentId
+	}
+
+	public get activeIntentMutationClass(): "AST_REFACTOR" | "INTENT_EVOLUTION" | undefined {
+		return this._activeIntentMutationClass
 	}
 
 	static create(options: TaskOptions): [Task, Promise<void>] {
