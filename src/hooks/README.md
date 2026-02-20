@@ -11,7 +11,10 @@ Provide an isolated pre-tool and post-tool interception layer that can be wired 
 - `types.ts`: Shared contracts for pre and post hooks.
 - `HookEngine.ts`: Composable middleware runner with fail-safe behavior.
 - `builtin/RequireIntentPreHook.ts`: Starter pre-hook for intent handshake enforcement.
+- `builtin/ScopeEnforcementPreHook.ts`: Scope boundary enforcement based on `.orchestration/active_intents.yaml`.
+- `builtin/StaleReadPreHook.ts`: Optimistic stale-read lock for write tools.
 - `builtin/TraceMutationPostHook.ts`: Starter post-hook for mutation trace updates.
+- `__tests__/GovernanceIntegration.test.ts`: End-to-end governance integration tests (intent, scope, stale, trace).
 - `index.ts`: Exports for hook module entry.
 
 ## Integration Target
