@@ -1,6 +1,16 @@
 import { HookContext, HookDecision, PreToolHook } from "../types"
 
-const MUTATING_TOOLS = new Set(["write_to_file", "execute_command"])
+const MUTATING_TOOLS = new Set([
+	"write_to_file",
+	"execute_command",
+	"apply_diff",
+	"edit",
+	"search_and_replace",
+	"search_replace",
+	"edit_file",
+	"apply_patch",
+	"generate_image",
+])
 
 export class RequireIntentPreHook implements PreToolHook {
 	name = "require-intent-pre-hook"

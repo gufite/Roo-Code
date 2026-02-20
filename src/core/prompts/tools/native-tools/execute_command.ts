@@ -19,6 +19,12 @@ const COMMAND_PARAMETER_DESCRIPTION = `Shell command to execute`
 
 const CWD_PARAMETER_DESCRIPTION = `Optional working directory for the command, relative or absolute`
 
+const INTENT_ID_PARAMETER_DESCRIPTION = `The active intent ID this mutation belongs to (for example: "INT-001").`
+
+const MUTATION_CLASS_PARAMETER_DESCRIPTION = `Mutation class for traceability:
+- AST_REFACTOR: code restructuring without new behavior
+- INTENT_EVOLUTION: new behavior or requirement change`
+
 export default {
 	type: "function",
 	function: {
@@ -36,8 +42,17 @@ export default {
 					type: ["string", "null"],
 					description: CWD_PARAMETER_DESCRIPTION,
 				},
+				intent_id: {
+					type: "string",
+					description: INTENT_ID_PARAMETER_DESCRIPTION,
+				},
+				mutation_class: {
+					type: "string",
+					enum: ["AST_REFACTOR", "INTENT_EVOLUTION"],
+					description: MUTATION_CLASS_PARAMETER_DESCRIPTION,
+				},
 			},
-			required: ["command", "cwd"],
+			required: ["command", "cwd", "intent_id", "mutation_class"],
 			additionalProperties: false,
 		},
 	},

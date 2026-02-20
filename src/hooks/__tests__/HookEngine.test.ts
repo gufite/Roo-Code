@@ -117,6 +117,12 @@ describe("RequireIntentPreHook", () => {
 		expect(decision.allow).toBe(false)
 	})
 
+	it("blocks apply_diff when intent_id is missing", () => {
+		const ctx: HookContext = { ...baseContext, toolName: "apply_diff", toolArgs: {} }
+		const decision = hook.run(ctx)
+		expect(decision.allow).toBe(false)
+	})
+
 	it("allows write_to_file when intent_id is provided", () => {
 		const ctx: HookContext = {
 			...baseContext,

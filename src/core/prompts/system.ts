@@ -25,6 +25,16 @@ import {
 	getSkillsSection,
 } from "./sections"
 
+const INTENT_HANDSHAKE_SECTION = `# Intent Handshake Protocol
+
+Before using any mutating tool (for example: write_to_file, apply_diff, edit_file, search_replace, apply_patch, execute_command), you MUST first call \`select_active_intent\`.
+
+Mutation governance requirements:
+- Do not mutate files or run mutating commands without an active intent.
+- Include \`intent_id\` and \`mutation_class\` on mutating tool calls.
+- Keep edits within the selected intent scope.
+`
+
 // Helper function to get prompt component, filtering out empty objects
 export function getPromptComponent(
 	customModePrompts: CustomModePrompts | undefined,
@@ -89,6 +99,8 @@ ${markdownFormattingSection()}
 ${getSharedToolUseSection()}${toolsCatalog}
 
 	${getToolUseGuidelinesSection()}
+
+${INTENT_HANDSHAKE_SECTION}
 
 ${getCapabilitiesSection(cwd, shouldIncludeMcp ? mcpHub : undefined)}
 
