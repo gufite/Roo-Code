@@ -160,6 +160,11 @@ export interface TaskOptions extends CreateTaskOptions {
 	initialStatus?: "active" | "delegated" | "completed"
 }
 
+interface FileReadSnapshot {
+	sha256: string
+	capturedAt: string
+}
+
 export class Task extends EventEmitter<TaskEvents> implements TaskLike {
 	readonly taskId: string
 	readonly rootTaskId?: string
@@ -327,6 +332,7 @@ export class Task extends EventEmitter<TaskEvents> implements TaskLike {
 	toolUsage: ToolUsage = {}
 	private _activeIntentId?: string
 	private _activeIntentMutationClass?: "AST_REFACTOR" | "INTENT_EVOLUTION"
+	private readonly fileReadSnapshots = new Map<string, FileReadSnapshot>()
 
 	// Checkpoints
 	enableCheckpoints: boolean
@@ -861,6 +867,35 @@ export class Task extends EventEmitter<TaskEvents> implements TaskLike {
 
 	public get activeIntentMutationClass(): "AST_REFACTOR" | "INTENT_EVOLUTION" | undefined {
 		return this._activeIntentMutationClass
+	}
+
+	private normalizeTrackedFilePath(filePath: string): string {
+		return path.relative(this.cwd, path.resolve(this.cwd, filePath)).replace(/\\/g, "/")
+	}
+
+	public recordFileReadSnapshot(filePath: string, content: string | Buffer): void {
+		if (!filePath) {
+			return
+		}
+		const normalizedPath = this.normalizeTrackedFilePath(filePath)
+		const contentBuffer = typeof content === "string" ? Buffer.from(content, "utf8") : content
+		const sha256 = crypto.createHash("sha256").update(contentBuffer).digest("hex")
+		this.fileReadSnapshots.set(normalizedPath, {
+			sha256,
+			capturedAt: new Date().toISOString(),
+		})
+	}
+
+	public clearFileReadSnapshot(filePath: string): void {
+		if (!filePath) {
+			return
+		}
+		const normalizedPath = this.normalizeTrackedFilePath(filePath)
+		this.fileReadSnapshots.delete(normalizedPath)
+	}
+
+	public getFileReadSnapshotsForHooks(): Record<string, FileReadSnapshot> {
+		return Object.fromEntries(this.fileReadSnapshots.entries())
 	}
 
 	static create(options: TaskOptions): [Task, Promise<void>] {

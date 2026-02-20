@@ -37,7 +37,7 @@ interface AgentTraceRecord {
 	files: TraceFile[]
 }
 
-const PATCH_FILE_MARKERS = ["*** Add File: ", "*** Delete File: ", "*** Update File: "] as const
+const PATCH_FILE_MARKERS = ["*** Add File: ", "*** Delete File: ", "*** Update File: ", "*** Move to: "] as const
 
 function sha256(content: string): string {
 	return "sha256:" + crypto.createHash("sha256").update(content, "utf8").digest("hex")

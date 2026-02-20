@@ -66,6 +66,12 @@ interface FileResult {
 	entry?: InternalFileEntry
 }
 
+function maybeRecordFileReadSnapshot(task: Task, filePath: string, content: string | Buffer): void {
+	;(
+		task as unknown as { recordFileReadSnapshot?: (filePath: string, content: string | Buffer) => void }
+	).recordFileReadSnapshot?.(filePath, content)
+}
+
 // ─── Tool Implementation ──────────────────────────────────────────────────────
 
 export class ReadFileTool extends BaseTool<"read_file"> {
@@ -217,6 +223,7 @@ export class ReadFileTool extends BaseTool<"read_file"> {
 					const buffer = await fs.readFile(fullPath)
 					const fileContent = buffer.toString("utf-8")
 					const result = this.processTextFile(fileContent, entry)
+					maybeRecordFileReadSnapshot(task, relPath, buffer)
 
 					await task.fileContextTracker.trackFileContext(relPath, "read_tool" as RecordSource)
 
@@ -768,6 +775,7 @@ export class ReadFileTool extends BaseTool<"read_file"> {
 
 				// Read text file
 				const rawContent = await fs.readFile(fullPath, "utf8")
+				maybeRecordFileReadSnapshot(task, relPath, rawContent)
 
 				// Handle line ranges if specified
 				let content: string

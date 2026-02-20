@@ -16,6 +16,12 @@ import type { ToolUse } from "../../shared/tools"
 
 import { BaseTool, ToolCallbacks } from "./BaseTool"
 
+function maybeRecordFileSnapshot(task: Task, filePath: string, content: string): void {
+	;(
+		task as unknown as { recordFileReadSnapshot?: (filePath: string, content: string) => void }
+	).recordFileReadSnapshot?.(filePath, content)
+}
+
 interface ApplyDiffParams {
 	path: string
 	diff: string
@@ -225,6 +231,7 @@ export class ApplyDiffTool extends BaseTool<"apply_diff"> {
 			// Track file edit operation
 			if (relPath) {
 				await task.fileContextTracker.trackFileContext(relPath, "roo_edited" as RecordSource)
+				maybeRecordFileSnapshot(task, relPath, diffResult.content)
 			}
 
 			// Used to determine if we should wait for busy terminal to update before sending api request

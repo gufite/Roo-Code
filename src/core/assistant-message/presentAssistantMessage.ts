@@ -41,7 +41,13 @@ import { codebaseSearchTool } from "../tools/CodebaseSearchTool"
 
 import { formatResponse } from "../prompts/responses"
 import { sanitizeToolUseId } from "../../utils/tool-id"
-import { HookEngine, RequireIntentPreHook, ScopeEnforcementPreHook, TraceMutationPostHook } from "../../hooks"
+import {
+	HookEngine,
+	RequireIntentPreHook,
+	ScopeEnforcementPreHook,
+	StaleReadPreHook,
+	TraceMutationPostHook,
+} from "../../hooks"
 import type { HookContext } from "../../hooks"
 
 /**
@@ -693,16 +699,31 @@ export async function presentAssistantMessage(cline: Task) {
 				hookEngine = new HookEngine()
 				hookEngine.registerPreHook(new RequireIntentPreHook())
 				hookEngine.registerPreHook(new ScopeEnforcementPreHook())
+				hookEngine.registerPreHook(new StaleReadPreHook())
 				hookEngine.registerPostHook(new TraceMutationPostHook())
+
+				const hookToolArgs = (block.nativeArgs ?? block.params ?? {}) as Record<string, unknown>
 
 				hookContext = {
 					taskId: cline.taskId,
 					toolName: block.name,
-					toolArgs: block.params as Record<string, unknown>,
+					toolArgs: hookToolArgs,
 					cwd: cline.cwd,
 					timestamp: new Date().toISOString(),
 					taskActiveIntentId: cline.activeIntentId,
 					taskActiveMutationClass: cline.activeIntentMutationClass,
+					taskFileReadSnapshots:
+						(
+							cline as unknown as {
+								getFileReadSnapshotsForHooks?: () => Record<
+									string,
+									{
+										sha256: string
+										capturedAt: string
+									}
+								>
+							}
+						).getFileReadSnapshotsForHooks?.() ?? {},
 				}
 
 				const preDecision = await hookEngine.runPreHooks(hookContext)

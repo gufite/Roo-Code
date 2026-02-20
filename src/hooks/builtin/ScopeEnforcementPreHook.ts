@@ -29,7 +29,7 @@ const WRITE_TOOLS = new Set([
 	"generate_image",
 ])
 
-const PATCH_FILE_MARKERS = ["*** Add File: ", "*** Delete File: ", "*** Update File: "] as const
+const PATCH_FILE_MARKERS = ["*** Add File: ", "*** Delete File: ", "*** Update File: ", "*** Move to: "] as const
 
 /**
  * Matches a relative file path against a glob-like scope pattern.

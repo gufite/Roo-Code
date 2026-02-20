@@ -15,6 +15,12 @@ import type { ToolUse } from "../../shared/tools"
 
 import { BaseTool, ToolCallbacks } from "./BaseTool"
 
+function maybeRecordFileSnapshot(task: Task, filePath: string, content: string): void {
+	;(
+		task as unknown as { recordFileReadSnapshot?: (filePath: string, content: string) => void }
+	).recordFileReadSnapshot?.(filePath, content)
+}
+
 interface EditParams {
 	file_path: string
 	old_string: string
@@ -221,6 +227,7 @@ export class EditTool extends BaseTool<"edit"> {
 			// Track file edit operation
 			if (relPath) {
 				await task.fileContextTracker.trackFileContext(relPath, "roo_edited" as RecordSource)
+				maybeRecordFileSnapshot(task, relPath, newContent)
 			}
 
 			task.didEditFile = true
