@@ -48,7 +48,8 @@ export class ScopeEnforcementPreHook implements PreToolHook {
 			return { allow: true }
 		}
 
-		const intentId = context.toolArgs["intent_id"] as string | undefined
+		const intentId =
+			(context.toolArgs["intent_id"] as string | undefined) ?? context.taskActiveIntentId ?? undefined
 		if (!intentId) {
 			// RequireIntentPreHook handles the missing-intent case — skip here.
 			return { allow: true }

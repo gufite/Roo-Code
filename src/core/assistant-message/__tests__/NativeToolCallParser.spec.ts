@@ -290,6 +290,30 @@ describe("NativeToolCallParser", () => {
 					}
 				})
 			})
+
+			describe("select_active_intent tool", () => {
+				it("should parse select_active_intent args", () => {
+					const toolCall = {
+						id: "toolu_select_intent_1",
+						name: "select_active_intent" as const,
+						arguments: JSON.stringify({
+							intent_id: "INT-001",
+							mutation_class: "AST_REFACTOR",
+						}),
+					}
+
+					const result = NativeToolCallParser.parseToolCall(toolCall)
+
+					expect(result).not.toBeNull()
+					expect(result?.type).toBe("tool_use")
+					if (result?.type === "tool_use") {
+						expect(result.nativeArgs).toEqual({
+							intent_id: "INT-001",
+							mutation_class: "AST_REFACTOR",
+						})
+					}
+				})
+			})
 		})
 	})
 

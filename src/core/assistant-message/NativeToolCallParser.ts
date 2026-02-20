@@ -546,6 +546,15 @@ export class NativeToolCallParser {
 				}
 				break
 
+			case "select_active_intent":
+				if (partialArgs.intent_id !== undefined || partialArgs.mutation_class !== undefined) {
+					nativeArgs = {
+						intent_id: partialArgs.intent_id,
+						mutation_class: partialArgs.mutation_class,
+					}
+				}
+				break
+
 			case "update_todo_list":
 				if (partialArgs.todos !== undefined) {
 					nativeArgs = {
@@ -877,6 +886,15 @@ export class NativeToolCallParser {
 						nativeArgs = {
 							mode_slug: args.mode_slug,
 							reason: args.reason,
+						} as NativeArgsFor<TName>
+					}
+					break
+
+				case "select_active_intent":
+					if (args.intent_id !== undefined && args.mutation_class !== undefined) {
+						nativeArgs = {
+							intent_id: args.intent_id,
+							mutation_class: args.mutation_class,
 						} as NativeArgsFor<TName>
 					}
 					break

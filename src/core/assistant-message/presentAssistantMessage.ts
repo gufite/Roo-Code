@@ -35,6 +35,7 @@ import { runSlashCommandTool } from "../tools/RunSlashCommandTool"
 import { skillTool } from "../tools/SkillTool"
 import { generateImageTool } from "../tools/GenerateImageTool"
 import { applyDiffTool as applyDiffToolClass } from "../tools/ApplyDiffTool"
+import { selectActiveIntentTool } from "../tools/SelectActiveIntentTool"
 import { isValidToolName, validateToolUse } from "../tools/validateToolUse"
 import { codebaseSearchTool } from "../tools/CodebaseSearchTool"
 
@@ -369,6 +370,8 @@ export async function presentAssistantMessage(cline: Task) {
 						return `[${block.name} to '${block.params.mode_slug}'${block.params.reason ? ` because: ${block.params.reason}` : ""}]`
 					case "codebase_search":
 						return `[${block.name} for '${block.params.query}']`
+					case "select_active_intent":
+						return `[${block.name} for '${block.params.intent_id}']`
 					case "read_command_output":
 						return `[${block.name} for '${block.params.artifact_id}']`
 					case "update_todo_list":
@@ -698,6 +701,8 @@ export async function presentAssistantMessage(cline: Task) {
 					toolArgs: block.params as Record<string, unknown>,
 					cwd: cline.cwd,
 					timestamp: new Date().toISOString(),
+					taskActiveIntentId: cline.activeIntentId,
+					taskActiveMutationClass: cline.activeIntentMutationClass,
 				}
 
 				const preDecision = await hookEngine.runPreHooks(hookContext)
@@ -712,6 +717,18 @@ export async function presentAssistantMessage(cline: Task) {
 				} else if (preDecision.contextPatch) {
 					// Merge any context enrichment from pre-hooks (e.g. active_intent_id).
 					hookContext = { ...hookContext, ...(preDecision.contextPatch as Partial<HookContext>) }
+					const resolvedIntentId = preDecision.contextPatch["resolved_intent_id"]
+					if (typeof resolvedIntentId === "string" && !hookContext.toolArgs["intent_id"]) {
+						hookContext.toolArgs["intent_id"] = resolvedIntentId
+					}
+					const resolvedMutationClass = preDecision.contextPatch["resolved_mutation_class"]
+					if (
+						typeof resolvedMutationClass === "string" &&
+						!hookContext.toolArgs["mutation_class"] &&
+						(resolvedMutationClass === "AST_REFACTOR" || resolvedMutationClass === "INTENT_EVOLUTION")
+					) {
+						hookContext.toolArgs["mutation_class"] = resolvedMutationClass
+					}
 				}
 			}
 
@@ -839,6 +856,13 @@ export async function presentAssistantMessage(cline: Task) {
 						break
 					case "switch_mode":
 						await switchModeTool.handle(cline, block as ToolUse<"switch_mode">, {
+							askApproval,
+							handleError,
+							pushToolResult,
+						})
+						break
+					case "select_active_intent":
+						await selectActiveIntentTool.handle(cline, block as ToolUse<"select_active_intent">, {
 							askApproval,
 							handleError,
 							pushToolResult,

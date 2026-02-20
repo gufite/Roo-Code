@@ -80,6 +80,8 @@ export const toolParamNames = [
 	// read_file legacy format parameter (backward compatibility)
 	"files",
 	"line_ranges",
+	"intent_id",
+	"mutation_class",
 ] as const
 
 export type ToolParamName = (typeof toolParamNames)[number]
@@ -106,6 +108,7 @@ export type NativeToolArgs = {
 		question: string
 		follow_up: Array<{ text: string; mode?: string }>
 	}
+	select_active_intent: { intent_id: string; mutation_class: "AST_REFACTOR" | "INTENT_EVOLUTION" }
 	codebase_search: { query: string; path?: string }
 	generate_image: GenerateImageParams
 	run_slash_command: { command: string; args?: string }
@@ -277,6 +280,7 @@ export const TOOL_DISPLAY_NAMES: Record<ToolName, string> = {
 	apply_patch: "apply patches using codex format",
 	search_files: "search files",
 	list_files: "list files",
+	select_active_intent: "select active intent",
 	use_mcp_tool: "use mcp tools",
 	access_mcp_resource: "access mcp resources",
 	ask_followup_question: "ask questions",
@@ -321,6 +325,7 @@ export const ALWAYS_AVAILABLE_TOOLS: ToolName[] = [
 	"update_todo_list",
 	"run_slash_command",
 	"skill",
+	"select_active_intent",
 ] as const
 
 /**
