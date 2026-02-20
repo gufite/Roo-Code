@@ -86,6 +86,11 @@ export const toolParamNames = [
 
 export type ToolParamName = (typeof toolParamNames)[number]
 
+type IntentMetadata = {
+	intent_id?: string
+	mutation_class?: "AST_REFACTOR" | "INTENT_EVOLUTION"
+}
+
 /**
  * Type map defining the native (typed) argument structure for each tool.
  * Tools not listed here will fall back to `any` for backward compatibility.
@@ -95,13 +100,23 @@ export type NativeToolArgs = {
 	read_file: import("@roo-code/types").ReadFileToolParams
 	read_command_output: { artifact_id: string; search?: string; offset?: number; limit?: number }
 	attempt_completion: { result: string }
-	execute_command: { command: string; cwd?: string }
-	apply_diff: { path: string; diff: string }
-	edit: { file_path: string; old_string: string; new_string: string; replace_all?: boolean }
-	search_and_replace: { file_path: string; old_string: string; new_string: string; replace_all?: boolean }
-	search_replace: { file_path: string; old_string: string; new_string: string }
-	edit_file: { file_path: string; old_string: string; new_string: string; expected_replacements?: number }
-	apply_patch: { patch: string }
+	execute_command: { command: string; cwd?: string } & IntentMetadata
+	apply_diff: { path: string; diff: string } & IntentMetadata
+	edit: { file_path: string; old_string: string; new_string: string; replace_all?: boolean } & IntentMetadata
+	search_and_replace: {
+		file_path: string
+		old_string: string
+		new_string: string
+		replace_all?: boolean
+	} & IntentMetadata
+	search_replace: { file_path: string; old_string: string; new_string: string } & IntentMetadata
+	edit_file: {
+		file_path: string
+		old_string: string
+		new_string: string
+		expected_replacements?: number
+	} & IntentMetadata
+	apply_patch: { patch: string } & IntentMetadata
 	list_files: { path: string; recursive?: boolean }
 	new_task: { mode: string; message: string; todos?: string }
 	ask_followup_question: {
@@ -117,7 +132,7 @@ export type NativeToolArgs = {
 	switch_mode: { mode_slug: string; reason: string }
 	update_todo_list: { todos: string }
 	use_mcp_tool: { server_name: string; tool_name: string; arguments?: Record<string, unknown> }
-	write_to_file: { path: string; content: string }
+	write_to_file: { path: string; content: string } & IntentMetadata
 	// Add more tools as they are migrated to native protocol
 }
 

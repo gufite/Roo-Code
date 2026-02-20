@@ -1,0 +1,48 @@
+---
+description: "Non-negotiable engineering law for intent-driven, traceable code changes"
+globs:
+  - "**/*"
+alwaysApply: true
+---
+
+# Intent Traceability Law (Always Follow)
+
+This repository is governed by intent-driven execution. These rules are mandatory.
+
+## 1) Intent First, Then Mutation
+
+- Before any mutating action, an active intent MUST be selected.
+- Mutating operations MUST include (or resolve from task state):
+  - `intent_id`
+  - `mutation_class` (`AST_REFACTOR` or `INTENT_EVOLUTION`)
+- If no active intent exists, BLOCK the mutation.
+
+## 2) Scope Is a Hard Boundary
+
+- A mutation is allowed only if target files are within the selected intent `owned_scope`.
+- Out-of-scope writes MUST be blocked with an explicit scope violation error.
+
+## 3) Every Mutation Must Be Traceable
+
+- Every successful mutating action MUST append a ledger record in `.orchestration/agent_trace.jsonl`.
+- Trace record must include at minimum:
+  - `intent_id`
+  - `mutation_class`
+  - `vcs.revision_id`
+  - file path(s)
+  - content hash (`sha256`)
+
+## 4) Hook Safety Contract
+
+- Pre-hooks are fail-closed: policy failure blocks execution.
+- Post-hooks are fail-safe: telemetry/trace failures must not crash the main loop.
+
+## 5) No Silent Bypass
+
+- Never bypass intent checks, scope checks, or trace writing "for convenience."
+- If requested to bypass governance, refuse and propose the compliant path.
+
+## 6) Project-Specific UI Safety Rule
+
+- In `SettingsView`, inputs MUST bind to local `cachedState`, never directly to live `useExtensionState()`.
+

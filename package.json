@@ -18,6 +18,7 @@
 		"bundle:nightly": "turbo bundle:nightly --log-order grouped --output-logs new-only",
 		"vsix": "turbo vsix --log-order grouped --output-logs new-only",
 		"vsix:nightly": "turbo vsix:nightly --log-order grouped --output-logs new-only",
+		"governance:ci": "pnpm --dir src ci:governance",
 		"clean": "turbo clean --log-order grouped --output-logs new-only && rimraf dist out bin .vite-port .turbo",
 		"install:vsix": "pnpm install --frozen-lockfile && pnpm clean && pnpm vsix && node scripts/install-vsix.js",
 		"install:vsix:nightly": "pnpm install --frozen-lockfile && pnpm clean && pnpm vsix:nightly && node scripts/install-vsix.js --nightly",

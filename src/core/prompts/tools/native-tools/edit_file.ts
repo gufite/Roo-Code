@@ -33,6 +33,12 @@ CRITICAL REQUIREMENTS:
 
 4. NO ESCAPING: Provide the literal text - do not escape special characters.`
 
+const INTENT_ID_PARAMETER_DESCRIPTION = `The active intent ID this mutation belongs to (for example: "INT-001").`
+
+const MUTATION_CLASS_PARAMETER_DESCRIPTION = `Mutation class for traceability:
+- AST_REFACTOR: code restructuring without new behavior
+- INTENT_EVOLUTION: new behavior or requirement change`
+
 const edit_file = {
 	type: "function",
 	function: {
@@ -62,8 +68,17 @@ const edit_file = {
 						"Number of replacements expected. Defaults to 1 if not specified. Use when you want to replace multiple occurrences of the same text.",
 					minimum: 1,
 				},
+				intent_id: {
+					type: "string",
+					description: INTENT_ID_PARAMETER_DESCRIPTION,
+				},
+				mutation_class: {
+					type: "string",
+					enum: ["AST_REFACTOR", "INTENT_EVOLUTION"],
+					description: MUTATION_CLASS_PARAMETER_DESCRIPTION,
+				},
 			},
-			required: ["file_path", "old_string", "new_string"],
+			required: ["file_path", "old_string", "new_string", "intent_id", "mutation_class"],
 			additionalProperties: false,
 		},
 	},

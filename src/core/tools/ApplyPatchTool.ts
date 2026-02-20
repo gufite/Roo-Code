@@ -20,10 +20,25 @@ interface ApplyPatchParams {
 	patch: string
 }
 
+function maybeRecordFileSnapshot(task: Task, filePath: string, content: string): void {
+	;(
+		task as unknown as { recordFileReadSnapshot?: (filePath: string, content: string) => void }
+	).recordFileReadSnapshot?.(filePath, content)
+}
+
+function maybeClearFileSnapshot(task: Task, filePath: string): void {
+	;(task as unknown as { clearFileReadSnapshot?: (filePath: string) => void }).clearFileReadSnapshot?.(filePath)
+}
+
 export class ApplyPatchTool extends BaseTool<"apply_patch"> {
 	readonly name = "apply_patch" as const
 
-	private static readonly FILE_HEADER_MARKERS = ["*** Add File: ", "*** Delete File: ", "*** Update File: "] as const
+	private static readonly FILE_HEADER_MARKERS = [
+		"*** Add File: ",
+		"*** Delete File: ",
+		"*** Update File: ",
+		"*** Move to: ",
+	] as const
 
 	private extractFirstPathFromPatch(patch: string | undefined): string | undefined {
 		if (!patch) {
@@ -222,6 +237,7 @@ export class ApplyPatchTool extends BaseTool<"apply_patch"> {
 
 		// Track file edit operation
 		await task.fileContextTracker.trackFileContext(relPath, "roo_edited" as RecordSource)
+		maybeRecordFileSnapshot(task, relPath, newContent)
 		task.didEditFile = true
 
 		const message = await task.diffViewProvider.pushToolWriteResult(task, task.cwd, true)
@@ -282,6 +298,7 @@ export class ApplyPatchTool extends BaseTool<"apply_patch"> {
 			return
 		}
 
+		maybeClearFileSnapshot(task, relPath)
 		task.didEditFile = true
 		pushToolResult(`Successfully deleted ${relPath}`)
 		task.processQueuedMessages()
@@ -430,6 +447,8 @@ export class ApplyPatchTool extends BaseTool<"apply_patch"> {
 			}
 
 			await task.fileContextTracker.trackFileContext(change.movePath, "roo_edited" as RecordSource)
+			maybeClearFileSnapshot(task, relPath)
+			maybeRecordFileSnapshot(task, change.movePath, newContent)
 		} else {
 			// Save changes to the same file
 			if (isPreventFocusDisruptionEnabled) {
@@ -439,6 +458,7 @@ export class ApplyPatchTool extends BaseTool<"apply_patch"> {
 			}
 
 			await task.fileContextTracker.trackFileContext(relPath, "roo_edited" as RecordSource)
+			maybeRecordFileSnapshot(task, relPath, newContent)
 		}
 
 		task.didEditFile = true

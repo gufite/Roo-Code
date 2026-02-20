@@ -23,6 +23,12 @@ interface WriteToFileParams {
 	content: string
 }
 
+function maybeRecordFileSnapshot(task: Task, filePath: string, content: string): void {
+	;(
+		task as unknown as { recordFileReadSnapshot?: (filePath: string, content: string) => void }
+	).recordFileReadSnapshot?.(filePath, content)
+}
+
 export class WriteToFileTool extends BaseTool<"write_to_file"> {
 	readonly name = "write_to_file" as const
 
@@ -171,6 +177,7 @@ export class WriteToFileTool extends BaseTool<"write_to_file"> {
 
 			if (relPath) {
 				await task.fileContextTracker.trackFileContext(relPath, "roo_edited" as RecordSource)
+				maybeRecordFileSnapshot(task, relPath, newContent)
 			}
 
 			task.didEditFile = true

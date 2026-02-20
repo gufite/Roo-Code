@@ -1,0 +1,11 @@
+Intent Traceability Law (Cursor compatibility file)
+
+Primary rule source:
+- .cursor/rules/intent-traceability-law.mdc
+
+Mandatory policy summary:
+1. Select active intent before any mutating action.
+2. Enforce owned_scope for all file mutations.
+3. Append trace records to .orchestration/agent_trace.jsonl for each successful mutation.
+4. Keep pre-hooks fail-closed and post-hooks fail-safe.
+5. Do not bypass governance checks.

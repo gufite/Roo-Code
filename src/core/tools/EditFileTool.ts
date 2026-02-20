@@ -22,6 +22,12 @@ interface EditFileParams {
 	expected_replacements?: number
 }
 
+function maybeRecordFileSnapshot(task: Task, filePath: string, content: string): void {
+	;(
+		task as unknown as { recordFileReadSnapshot?: (filePath: string, content: string) => void }
+	).recordFileReadSnapshot?.(filePath, content)
+}
+
 type LineEnding = "\r\n" | "\n"
 
 /**
@@ -452,6 +458,7 @@ export class EditFileTool extends BaseTool<"edit_file"> {
 			// Track file edit operation
 			if (relPath) {
 				await task.fileContextTracker.trackFileContext(relPath, "roo_edited" as RecordSource)
+				maybeRecordFileSnapshot(task, relPath, newContent)
 			}
 
 			task.didEditFile = true

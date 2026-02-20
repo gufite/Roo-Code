@@ -1,7 +1,12 @@
 import { describe, it, expect, vi } from "vitest"
+import crypto from "crypto"
+import fs from "fs/promises"
+import os from "os"
+import path from "path"
 
 import { HookEngine } from "../HookEngine"
 import { RequireIntentPreHook } from "../builtin/RequireIntentPreHook"
+import { StaleReadPreHook } from "../builtin/StaleReadPreHook"
 import type { HookContext, PreToolHook, PostToolHook, PostToolHookContext } from "../types"
 
 const baseContext: HookContext = {
@@ -117,6 +122,12 @@ describe("RequireIntentPreHook", () => {
 		expect(decision.allow).toBe(false)
 	})
 
+	it("blocks apply_diff when intent_id is missing", () => {
+		const ctx: HookContext = { ...baseContext, toolName: "apply_diff", toolArgs: {} }
+		const decision = hook.run(ctx)
+		expect(decision.allow).toBe(false)
+	})
+
 	it("allows write_to_file when intent_id is provided", () => {
 		const ctx: HookContext = {
 			...baseContext,
@@ -154,5 +165,82 @@ describe("RequireIntentPreHook", () => {
 		}
 		const decision = hook.run(ctx)
 		expect(decision.allow).toBe(false)
+	})
+})
+
+describe("StaleReadPreHook", () => {
+	const hook = new StaleReadPreHook()
+
+	it("allows when there is no read snapshot for the target file", async () => {
+		const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), "stale-hook-"))
+		try {
+			const ctx: HookContext = {
+				...baseContext,
+				toolName: "write_to_file",
+				cwd: tempDir,
+				toolArgs: { path: "a.txt" },
+				taskFileReadSnapshots: {},
+			}
+			const decision = await hook.run(ctx)
+			expect(decision.allow).toBe(true)
+		} finally {
+			await fs.rm(tempDir, { recursive: true, force: true })
+		}
+	})
+
+	it("allows when file hash matches the recorded read snapshot", async () => {
+		const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), "stale-hook-"))
+		try {
+			const relPath = "a.txt"
+			const content = "hello\nworld\n"
+			await fs.writeFile(path.join(tempDir, relPath), content, "utf8")
+			const sha256 = crypto.createHash("sha256").update(Buffer.from(content, "utf8")).digest("hex")
+
+			const ctx: HookContext = {
+				...baseContext,
+				toolName: "apply_diff",
+				cwd: tempDir,
+				toolArgs: { path: relPath },
+				taskFileReadSnapshots: {
+					[relPath]: {
+						sha256,
+						capturedAt: "2026-02-20T00:00:00Z",
+					},
+				},
+			}
+			const decision = await hook.run(ctx)
+			expect(decision.allow).toBe(true)
+		} finally {
+			await fs.rm(tempDir, { recursive: true, force: true })
+		}
+	})
+
+	it("blocks when file content changed after the recorded read snapshot", async () => {
+		const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), "stale-hook-"))
+		try {
+			const relPath = "a.txt"
+			await fs.writeFile(path.join(tempDir, relPath), "new-content", "utf8")
+			const staleSha = crypto.createHash("sha256").update(Buffer.from("old-content", "utf8")).digest("hex")
+
+			const ctx: HookContext = {
+				...baseContext,
+				toolName: "search_replace",
+				cwd: tempDir,
+				toolArgs: { file_path: relPath },
+				taskFileReadSnapshots: {
+					[relPath]: {
+						sha256: staleSha,
+						capturedAt: "2026-02-20T00:00:00Z",
+					},
+				},
+			}
+			const decision = await hook.run(ctx)
+			expect(decision.allow).toBe(false)
+			if (!decision.allow) {
+				expect(decision.code).toBe("STALE_CONTEXT")
+			}
+		} finally {
+			await fs.rm(tempDir, { recursive: true, force: true })
+		}
 	})
 })

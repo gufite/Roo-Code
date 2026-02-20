@@ -37,6 +37,8 @@ interface AgentTraceRecord {
 	files: TraceFile[]
 }
 
+const PATCH_FILE_MARKERS = ["*** Add File: ", "*** Delete File: ", "*** Update File: ", "*** Move to: "] as const
+
 function sha256(content: string): string {
 	return "sha256:" + crypto.createHash("sha256").update(content, "utf8").digest("hex")
 }
@@ -71,11 +73,63 @@ function computeMutationClass(
 	return "UNKNOWN"
 }
 
+function extractFilePathsFromPatch(patchContent: string): string[] {
+	const filePaths: string[] = []
+	const lines = patchContent.split("\n")
+
+	for (const line of lines) {
+		for (const marker of PATCH_FILE_MARKERS) {
+			if (line.startsWith(marker)) {
+				const filePath = line.substring(marker.length).trim()
+				if (filePath) filePaths.push(filePath)
+				break
+			}
+		}
+	}
+
+	return filePaths
+}
+
+function extractChangedFiles(toolName: string, toolArgs: Record<string, unknown>, changedFiles: string[]): string[] {
+	const result = new Set<string>(changedFiles.filter((p) => typeof p === "string" && p.length > 0))
+
+	const pathArg = toolArgs["path"]
+	if (typeof pathArg === "string" && pathArg.length > 0) result.add(pathArg)
+
+	const filePathArg = toolArgs["file_path"]
+	if (typeof filePathArg === "string" && filePathArg.length > 0) result.add(filePathArg)
+
+	const pathsArg = toolArgs["paths"]
+	if (Array.isArray(pathsArg)) {
+		for (const p of pathsArg) {
+			if (typeof p === "string" && p.length > 0) result.add(p)
+		}
+	}
+
+	if (toolName === "apply_patch" && typeof toolArgs["patch"] === "string") {
+		for (const p of extractFilePathsFromPatch(toolArgs["patch"] as string)) {
+			result.add(p)
+		}
+	}
+
+	return Array.from(result)
+}
+
 export class TraceMutationPostHook implements PostToolHook {
 	name = "trace-mutation-post-hook"
 
 	async run(context: PostToolHookContext): Promise<void> {
-		const MUTATING_TOOLS = new Set(["write_to_file", "apply_diff", "edit_file", "apply_patch", "search_replace"])
+		const MUTATING_TOOLS = new Set([
+			"write_to_file",
+			"apply_diff",
+			"edit",
+			"search_and_replace",
+			"edit_file",
+			"apply_patch",
+			"search_replace",
+			"execute_command",
+			"generate_image",
+		])
 		if (!MUTATING_TOOLS.has(context.toolName)) {
 			return
 		}
@@ -96,8 +150,10 @@ export class TraceMutationPostHook implements PostToolHook {
 		const revisionId = getGitHead(cwd)
 		const mutationClass = computeMutationClass(context.toolName, context.toolArgs, context.taskActiveMutationClass)
 
+		const tracedChangedFiles = extractChangedFiles(context.toolName, context.toolArgs, context.changedFiles)
+
 		const files: TraceFile[] = await Promise.all(
-			context.changedFiles.map(async (relPath) => {
+			tracedChangedFiles.map(async (relPath) => {
 				const absPath = path.resolve(cwd, relPath)
 				let content = ""
 				try {

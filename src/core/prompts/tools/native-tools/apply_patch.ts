@@ -38,6 +38,12 @@ Example patch:
 *** Delete File: obsolete.txt
 *** End Patch`
 
+const INTENT_ID_PARAMETER_DESCRIPTION = `The active intent ID this mutation belongs to (for example: "INT-001").`
+
+const MUTATION_CLASS_PARAMETER_DESCRIPTION = `Mutation class for traceability:
+- AST_REFACTOR: code restructuring without new behavior
+- INTENT_EVOLUTION: new behavior or requirement change`
+
 const apply_patch = {
 	type: "function",
 	function: {
@@ -51,8 +57,17 @@ const apply_patch = {
 					description:
 						"The complete patch text in the apply_patch format, starting with '*** Begin Patch' and ending with '*** End Patch'.",
 				},
+				intent_id: {
+					type: "string",
+					description: INTENT_ID_PARAMETER_DESCRIPTION,
+				},
+				mutation_class: {
+					type: "string",
+					enum: ["AST_REFACTOR", "INTENT_EVOLUTION"],
+					description: MUTATION_CLASS_PARAMETER_DESCRIPTION,
+				},
 			},
-			required: ["patch"],
+			required: ["patch", "intent_id", "mutation_class"],
 			additionalProperties: false,
 		},
 	},
