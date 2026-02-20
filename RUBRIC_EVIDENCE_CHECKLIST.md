@@ -75,7 +75,5 @@ This checklist maps governance rubric criteria to concrete implementation and au
 Run these commands to validate rubric evidence:
 
 ```bash
-cd src
-pnpm vitest run hooks/__tests__/HookEngine.test.ts hooks/__tests__/GovernanceIntegration.test.ts core/tools/__tests__/selectActiveIntentTool.spec.ts core/assistant-message/__tests__/NativeToolCallParser.spec.ts core/assistant-message/__tests__/presentAssistantMessage-custom-tool.spec.ts core/assistant-message/__tests__/presentAssistantMessage-images.spec.ts core/assistant-message/__tests__/presentAssistantMessage-unknown-tool.spec.ts
-pnpm check-types
+pnpm governance:ci
 ```

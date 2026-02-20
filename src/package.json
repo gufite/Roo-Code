@@ -438,6 +438,8 @@
 		"check-types": "tsc --noEmit",
 		"pretest": "turbo run bundle --cwd ..",
 		"test": "vitest run",
+		"test:governance": "vitest run hooks/__tests__/HookEngine.test.ts hooks/__tests__/GovernanceIntegration.test.ts core/tools/__tests__/selectActiveIntentTool.spec.ts core/assistant-message/__tests__/NativeToolCallParser.spec.ts core/assistant-message/__tests__/presentAssistantMessage-custom-tool.spec.ts core/assistant-message/__tests__/presentAssistantMessage-images.spec.ts core/assistant-message/__tests__/presentAssistantMessage-unknown-tool.spec.ts",
+		"ci:governance": "pnpm test:governance && pnpm check-types",
 		"format": "prettier --write .",
 		"bundle": "node esbuild.mjs",
 		"vscode:prepublish": "pnpm bundle --production",

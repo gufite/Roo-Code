@@ -41,6 +41,16 @@ jobs:
             - name: Check types
               run: pnpm check-types
 
+    governance-gate:
+        runs-on: ubuntu-latest
+        steps:
+            - name: Checkout code
+              uses: actions/checkout@v4
+            - name: Setup Node.js and pnpm
+              uses: ./.github/actions/setup-node-pnpm
+            - name: Run governance gate
+              run: pnpm governance:ci
+
     unit-test:
         name: platform-unit-test (${{ matrix.name }})
         runs-on: ${{ matrix.os }}
