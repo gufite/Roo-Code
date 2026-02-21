@@ -48,6 +48,9 @@ Detail the steps to test your changes. This helps reviewers verify your work.
 - [ ] **Testing**: New and/or updated tests have been added to cover my changes (if applicable).
 - [ ] **Documentation Impact**: I have considered if my changes require documentation updates (see "Documentation Updates" section below).
 - [ ] **Contribution Guidelines**: I have read and agree to the [Contributor Guidelines](/CONTRIBUTING.md).
+- [ ] **Governance Gate**: I ran `pnpm governance:ci` locally and it passed.
+- [ ] **Intent Governance**: If this PR changes mutating tool behavior, intent/scope/trace hooks or tests were updated accordingly.
+- [ ] **Artifact Consistency**: If `.orchestration/` files changed, cross-references (`intent_id`, trace `related.specification`, map entries) remain valid.
 
 ### Screenshots / Videos
 
